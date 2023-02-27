@@ -1,4 +1,6 @@
-package socialmedia;
+package socialmedia.socialmedia.interfaces;
+
+import socialmedia.socialmedia.excepts.*;
 
 import java.io.IOException;
 import java.io.Serializable;

@@ -1,4 +1,4 @@
-package socialmedia;
+package socialmedia.socialmedia.excepts;
 
 /**
  * Thrown when attempting to assign an account handle already in use in the

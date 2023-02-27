@@ -1,4 +1,4 @@
-package socialmedia;
+package socialmedia.socialmedia.excepts;
 
 /**
  * Thrown when attempting to use a post ID that does not exit in the system.

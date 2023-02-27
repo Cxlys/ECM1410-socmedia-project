@@ -1,4 +1,4 @@
-package socialmedia;
+package socialmedia.socialmedia.excepts;
 
 /**
  * Thrown when attempting to act upon an not-actionable post.

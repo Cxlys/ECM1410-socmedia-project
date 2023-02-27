@@ -1,4 +1,7 @@
-package socialmedia;
+package socialmedia.socialmedia;
+
+import socialmedia.socialmedia.excepts.*;
+import socialmedia.socialmedia.interfaces.MiniSocialMediaPlatform;
 
 import java.io.IOException;
 

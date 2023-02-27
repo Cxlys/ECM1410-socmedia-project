@@ -1,4 +1,6 @@
+package socialmedia.socialmedia.interfaces;
+
 public interface Interactable {
-    private int commentCount;
-    private int endorseCount;
+    int commentCount = 0;
+    int endorseCount = 0;
 }

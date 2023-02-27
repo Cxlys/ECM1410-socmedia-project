@@ -1,4 +1,4 @@
-package socialmedia;
+package socialmedia.socialmedia.excepts;
 
 /**
  * Thrown when attempting to create a post which the message is empty or has

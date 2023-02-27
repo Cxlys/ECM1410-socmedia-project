@@ -1,3 +1,7 @@
+package socialmedia.socialmedia;
+
+import socialmedia.socialmedia.interfaces.Interactable;
+
 public class Post implements Interactable {
     protected int id;
     protected String message;

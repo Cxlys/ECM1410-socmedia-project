@@ -1,8 +1,9 @@
-import socialmedia.AccountIDNotRecognisedException;
-import socialmedia.BadSocialMedia;
-import socialmedia.IllegalHandleException;
-import socialmedia.InvalidHandleException;
-import socialmedia.SocialMediaPlatform;
+package socialmedia;
+
+import socialmedia.socialmedia.interfaces.SocialMediaPlatform;
+import socialmedia.socialmedia.excepts.AccountIDNotRecognisedException;
+import socialmedia.socialmedia.excepts.IllegalHandleException;
+import socialmedia.socialmedia.excepts.InvalidHandleException;
 
 /**
  * A short program to illustrate an app testing some minimal functionality of a
@@ -24,7 +25,7 @@ public class SocialMediaPlatformTestApp {
 	public static void main(String[] args) {
 		System.out.println("The system compiled and started the execution...");
 
-		SocialMediaPlatform platform = new BadSocialMedia();
+		SocialMediaPlatform platform = new SocialMedia();
 
 		assert (platform.getNumberOfAccounts() == 0) : "Innitial SocialMediaPlatform not empty as required.";
 		assert (platform.getTotalOriginalPosts() == 0) : "Innitial SocialMediaPlatform not empty as required.";

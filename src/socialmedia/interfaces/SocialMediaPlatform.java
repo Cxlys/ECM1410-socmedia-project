@@ -1,4 +1,8 @@
-package socialmedia;
+package socialmedia.socialmedia.interfaces;
+
+import socialmedia.socialmedia.excepts.HandleNotRecognisedException;
+import socialmedia.socialmedia.excepts.IllegalHandleException;
+import socialmedia.socialmedia.excepts.InvalidHandleException;
 
 /**
  * SocialMediaPlatform interface. This interface is a more elaborated version of
