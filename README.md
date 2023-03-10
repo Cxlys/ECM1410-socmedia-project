@@ -24,6 +24,7 @@ Posts have:
 	• Keep track of comments and endorsements
 
 Endorsements and comments are children of posts.
+
 Comments have:
 	• A way to point to another post
 
@@ -32,7 +33,7 @@ Endorsements have…
 	• A way to refer to original or comment posts
 	• They cannot be endorsed or commented
 
-When an endorsement is removed, all of its endorsements should also be removed.
+When a Post is removed, all of its endorsements should also be removed.
 
 Front-end not important, back-end correctness will be tested through the back-end interface on submission. Interface is SocialMediaTestApp?
 

@@ -3,7 +3,6 @@ package socialmedia;
 import socialmedia.socialmedia.*;
 import socialmedia.socialmedia.excepts.*;
 import socialmedia.socialmedia.interfaces.SocialMediaPlatform;
-import socialmedia.socialmedia.interfaces.Interactable;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -103,7 +102,7 @@ public class SocialMedia implements SocialMediaPlatform {
         // Error handling
         if (!accounts.containsKey(Objects.hash(handle)))
             throw new HandleNotRecognisedException();
-        if (message.length() > 100 || message.length() <= 0)
+        if (message.length() > 100 || message.length() == 0)
             throw new InvalidPostException();
 
         Post post = new Post(message, Objects.hash(handle));
@@ -114,8 +113,24 @@ public class SocialMedia implements SocialMediaPlatform {
     @Override
     public int endorsePost(String handle, int id)
             throws HandleNotRecognisedException, PostIDNotRecognisedException, NotActionablePostException {
-        // TODO Auto-generated method stub
-        return 0;
+        Post post = posts.stream()
+                .filter(x -> Objects.equals(x.getId(), id))
+                .findFirst()
+                .orElse(null);
+
+        // Error handling
+        if (!accounts.containsKey(Objects.hash(handle)))
+            throw new HandleNotRecognisedException();
+        if (Objects.equals(post, null)) {
+            throw new PostIDNotRecognisedException();
+        }
+        if (post instanceof Endorsement) {
+            throw new NotActionablePostException();
+        }
+
+        Endorsement endorsement = new Endorsement(post.getMessage(), Objects.hash(handle), post.getId());
+        posts.add(endorsement);
+        return endorsement.getId();
     }
 
     @Override
@@ -136,7 +151,7 @@ public class SocialMedia implements SocialMediaPlatform {
         if (post instanceof Endorsement) {
             throw new NotActionablePostException();
         }
-        if (message.length() > 100 || message.length() <= 0)
+        if (message.length() > 100 || message.length() == 0)
             throw new InvalidPostException();
 
         Comment comment = new Comment(message, Objects.hash(handle), id);
@@ -153,6 +168,8 @@ public class SocialMedia implements SocialMediaPlatform {
 
         if (Objects.equals(post, null)) throw new PostIDNotRecognisedException();
         posts.remove(post);
+
+        //need to remove all comments and endorsements too
     }
 
     @Override
@@ -187,7 +204,7 @@ public class SocialMedia implements SocialMediaPlatform {
     public int getTotalOriginalPosts() {
         // TODO Auto-generated method stub
         return (int) posts.stream()
-                .filter(x -> !(x instanceof Comment) && !(x instanceof Endorsement))
+                .filter(x -> !(x instanceof Comment))
                 .count();
     }
 

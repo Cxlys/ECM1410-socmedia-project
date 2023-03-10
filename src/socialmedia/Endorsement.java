@@ -1,9 +1,7 @@
 package socialmedia.socialmedia;
 
-public class Endorsement extends Post {
-    int originalPostID;
-
-    public Endorsement(String message, int authorID) {
-        super(message, authorID);
+public class Endorsement extends Comment {
+    public Endorsement(String message, int authorID, int originalPostID) {
+        super(message, authorID, originalPostID);
     }
 }

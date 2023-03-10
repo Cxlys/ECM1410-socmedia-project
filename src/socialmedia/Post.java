@@ -11,6 +11,10 @@ public class Post implements Interactable {
         this.authorID = authorID;
     }
 
+    public String getMessage() {
+        return message;
+    }
+
     protected int id;
     protected String message;
     protected int authorID;
