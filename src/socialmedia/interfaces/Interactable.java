@@ -1,6 +1,8 @@
 package socialmedia.socialmedia.interfaces;
 
 public interface Interactable {
-    public int commentCount = 0;
-    public int endorseCount = 0;
+    int getCommentCount();
+    int getEndorseCount();
+    void incrementCommentCount();
+    void incrementEndorseCount();
 }
