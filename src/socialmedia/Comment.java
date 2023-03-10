@@ -1,9 +1,12 @@
 package socialmedia.socialmedia;
 
-import socialmedia.socialmedia.interfaces.Intractable;
+import socialmedia.socialmedia.interfaces.Interactable;
 
-public class Comment extends Post implements Intractable {
+public class Comment extends Post implements Interactable {
     int originalPostID;
-    int commentCount;
-    int endorseCount;
+
+    public Comment(String message, int authorID, int originalPostID) {
+        super(message, authorID);
+        this.originalPostID = originalPostID;
+    }
 }
