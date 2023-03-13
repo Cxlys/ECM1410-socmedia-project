@@ -13,7 +13,7 @@ import java.util.Objects;
 public class SocialMedia implements SocialMediaPlatform {
 
     HashMap<Integer, User> accounts = new HashMap<>();
-    ArrayList<Post> posts = new ArrayList<>();
+    ArrayList<BasePost> posts = new ArrayList<>();
 
     @Override
     public int createAccount(String handle) throws IllegalHandleException, InvalidHandleException {
@@ -88,7 +88,7 @@ public class SocialMedia implements SocialMediaPlatform {
         if (Objects.equals(user, null))
             throw new HandleNotRecognisedException();
 
-        List<Post> userPosts = posts.stream().filter(x -> x.getAuthorID() == user.getId()).toList();
+        List<BasePost> userPosts = posts.stream().filter(x -> x.getAuthorID() == user.getId()).toList();
 
         return "ID: " + user.getId() + "\n" +
                 "Handle: " + user.getHandle() + "\n" +
@@ -113,7 +113,7 @@ public class SocialMedia implements SocialMediaPlatform {
     @Override
     public int endorsePost(String handle, int id)
             throws HandleNotRecognisedException, PostIDNotRecognisedException, NotActionablePostException {
-        Post post = posts.stream()
+        BasePost post = posts.stream()
                 .filter(x -> Objects.equals(x.getId(), id))
                 .findFirst()
                 .orElse(null);
@@ -137,7 +137,7 @@ public class SocialMedia implements SocialMediaPlatform {
     public int commentPost(String handle, int id, String message) throws HandleNotRecognisedException,
             PostIDNotRecognisedException, NotActionablePostException, InvalidPostException {
 
-        Post post = posts.stream()
+        BasePost post = posts.stream()
                 .filter(x -> Objects.equals(x.getId(), id))
                 .findFirst()
                 .orElse(null);
@@ -161,7 +161,7 @@ public class SocialMedia implements SocialMediaPlatform {
 
     @Override
     public void deletePost(int id) throws PostIDNotRecognisedException {
-        Post post = posts.stream()
+        BasePost post = posts.stream()
                 .filter(x -> Objects.equals(x.getId(), id))
                 .findFirst()
                 .orElse(null);
@@ -175,7 +175,7 @@ public class SocialMedia implements SocialMediaPlatform {
     @Override
     public String showIndividualPost(int id) throws PostIDNotRecognisedException {
         // Error handling
-        Post post = posts.stream()
+        BasePost post = posts.stream()
                 .filter(x -> Objects.equals(x.getId(), id))
                 .findFirst()
                 .orElse(null);
@@ -183,8 +183,8 @@ public class SocialMedia implements SocialMediaPlatform {
         if (Objects.equals(post, null)) throw new PostIDNotRecognisedException();
 
         return "ID: " + post.getId() + "\n" +
-                "Account: " + accounts.get(post.getAuthorID()).getHandle() + "\n" +
-                "Endorsements: " + post.endorseCount;
+                "Account: " + accounts.get(post.getAuthorID()).getHandle() + "\n" + ((post instanceof Post) ?
+                ("No. endorsements: " + ((Post) post).endorseCount + " | No. comments: " + ((Post) post).commentCount) : "");
     }
 
     @Override
@@ -204,7 +204,7 @@ public class SocialMedia implements SocialMediaPlatform {
     public int getTotalOriginalPosts() {
         // TODO Auto-generated method stub
         return (int) posts.stream()
-                .filter(x -> !(x instanceof Comment))
+                .filter(x -> (x instanceof Post) && !(x instanceof Comment))
                 .count();
     }
 
