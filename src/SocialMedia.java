@@ -2,13 +2,12 @@ package socialmedia;
 
 import socialmedia.socialmedia.*;
 import socialmedia.socialmedia.excepts.*;
+import socialmedia.socialmedia.interfaces.Interactable;
 import socialmedia.socialmedia.interfaces.SocialMediaPlatform;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.function.Predicate;
 
 public class SocialMedia implements SocialMediaPlatform {
 
@@ -167,9 +166,28 @@ public class SocialMedia implements SocialMediaPlatform {
                 .orElse(null);
 
         if (Objects.equals(post, null)) throw new PostIDNotRecognisedException();
-        posts.remove(post);
 
-        //need to remove all comments and endorsements too
+        // From post:
+        // Find all comments and endorsements linked to post
+        // Find all comments and endorsemnets linked to comment/endorsement
+        // Repeat until clean
+
+        deleteAllRelatedPosts(post, posts);
+    }
+
+    /**
+     * The method recursively takes a post from a given list, and iterates over the list in a depth-first manner until
+     * all of its Comments and Endorsements are found, at which point it removes them.
+     * @param original Post for which all of its children should be found.
+     * @param list List to be iterated over.
+     */
+    void deleteAllRelatedPosts(BasePost original, List<BasePost> list) { // Add void Predicate later
+        list.stream()
+                .filter(x -> x instanceof Endorsement && ((Endorsement) x).getOriginalPostID() == original.getId())
+                .forEach(x -> {
+                    if (x instanceof Comment) deleteAllRelatedPosts(x, list);
+                    posts.remove(x);
+                });
     }
 
     @Override
@@ -183,8 +201,8 @@ public class SocialMedia implements SocialMediaPlatform {
         if (Objects.equals(post, null)) throw new PostIDNotRecognisedException();
 
         return "ID: " + post.getId() + "\n" +
-                "Account: " + accounts.get(post.getAuthorID()).getHandle() + "\n" + ((post instanceof Post) ?
-                ("No. endorsements: " + ((Post) post).endorseCount + " | No. comments: " + ((Post) post).commentCount) : "");
+                "Account: " + accounts.get(post.getAuthorID()).getHandle() + "\n" + ((post instanceof Interactable) ?
+                ("No. endorsements: " + ((Interactable) post).getEndorseCount() + " | No. comments: " + ((Interactable) post).getCommentCount()) : "");
     }
 
     @Override
@@ -204,7 +222,7 @@ public class SocialMedia implements SocialMediaPlatform {
     public int getTotalOriginalPosts() {
         // TODO Auto-generated method stub
         return (int) posts.stream()
-                .filter(x -> (x instanceof Post) && !(x instanceof Comment))
+                .filter(x -> x instanceof Post)
                 .count();
     }
 
@@ -212,7 +230,7 @@ public class SocialMedia implements SocialMediaPlatform {
     public int getTotalEndorsmentPosts() {
         // TODO Auto-generated method stub
         return (int) posts.stream()
-                .filter(x -> x instanceof Endorsement)
+                .filter(x -> !(x instanceof Interactable))
                 .count();
     }
 

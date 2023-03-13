@@ -3,14 +3,14 @@ package socialmedia.socialmedia;
 public abstract class BasePost {
 
     static int nextID = 0;
+    
+    protected int id;
+    protected String message;
+    protected int authorID;
 
     public String getMessage() {
         return message;
     }
-
-    protected int id;
-    protected String message;
-    protected int authorID;
 
     public int getId() {
         return id;

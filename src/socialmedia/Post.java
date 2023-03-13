@@ -9,8 +9,8 @@ public class Post extends BasePost implements Interactable {
         this.authorID = authorID;
     }
 
-    public int commentCount = 0;
-    public int endorseCount = 0;
+    int commentCount = 0;
+    int endorseCount = 0;
 
     @Override
     public int getCommentCount() {
