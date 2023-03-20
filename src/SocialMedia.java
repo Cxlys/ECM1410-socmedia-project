@@ -5,9 +5,8 @@ import socialmedia.socialmedia.excepts.*;
 import socialmedia.socialmedia.interfaces.Interactable;
 import socialmedia.socialmedia.interfaces.SocialMediaPlatform;
 
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
-import java.util.function.Predicate;
 
 public class SocialMedia implements SocialMediaPlatform {
 
@@ -45,11 +44,23 @@ public class SocialMedia implements SocialMediaPlatform {
     @Override
     public void removeAccount(int id) throws AccountIDNotRecognisedException {
         if (accounts.remove(id) == null) throw new AccountIDNotRecognisedException();
+
+        // Remove all related posts after account has been removed
+        posts.stream().filter(x -> x.getAuthorID() == id).forEach(x -> {
+            deleteAllRelatedPosts(x, posts);
+            posts.remove(x);
+        });
     }
 
     @Override
     public void removeAccount(String handle) throws HandleNotRecognisedException {
         if (accounts.remove(Objects.hash(handle)) == null) throw new HandleNotRecognisedException();
+
+        // Remove all related posts after account has been removed
+        posts.stream().filter(x -> x.getAuthorID() == Objects.hash(handle)).forEach(x -> {
+            deleteAllRelatedPosts(x, posts);
+            posts.remove(x);
+        });
     }
 
     @Override
@@ -69,6 +80,10 @@ public class SocialMedia implements SocialMediaPlatform {
         accounts.remove(Objects.hash(oldHandle), user);
         user.setHandle(newHandle);
         accounts.put(Objects.hash(newHandle), user);
+
+        posts.stream()
+                .filter(x -> x.getAuthorID() == Objects.hash(oldHandle))
+                .forEach(x -> x.setAuthorID(Objects.hash(newHandle)));
     }
 
     @Override
@@ -177,7 +192,7 @@ public class SocialMedia implements SocialMediaPlatform {
 
     /**
      * The method recursively takes a post from a given list, and iterates over the list in a depth-first manner until
-     * all of its Comments and Endorsements are found, at which point it removes them.
+     * all of its Comments and Endorsements are found, at which point it removes them from said list.
      * @param original Post for which all of its children should be found.
      * @param list List to be iterated over.
      */
@@ -208,9 +223,21 @@ public class SocialMedia implements SocialMediaPlatform {
     @Override
     public StringBuilder showPostChildrenDetails(int id)
             throws PostIDNotRecognisedException, NotActionablePostException {
-        // TODO Auto-generated method stub
         return null;
+
+        /* StringBuilder builder = new StringBuilder();
+        BasePost post = posts.get(id)
+        postStringHierarchy(post, posts, builder);
+        return builder; */
     }
+
+    /* StringBuilder postStringHierarchy(BasePost original, List<BasePost> list, StringBuilder builder) { // Add void Predicate later
+        list.stream()
+                .filter(x -> x instanceof Endorsement && ((Endorsement) x).getOriginalPostID() == original.getId())
+                .forEach(x -> {
+                    builder.append()
+                });
+    }*/
 
     @Override
     public int getNumberOfAccounts() {
@@ -244,25 +271,72 @@ public class SocialMedia implements SocialMediaPlatform {
 
     @Override
     public int getMostEndorsedPost() {
-        return 0;
+        if (posts.size() == 0) return 0;
+
+        Interactable currentMostEndorsed = new Post("", 0);
+
+        for (BasePost post : posts) {
+            if (post instanceof Interactable && ((Interactable) post).getEndorseCount() > currentMostEndorsed.getEndorseCount()) {
+                currentMostEndorsed = (Interactable) post;
+            }
+        }
+
+        return ((BasePost) currentMostEndorsed).getId();
     }
 
     @Override
     public int getMostEndorsedAccount() {
-        // TODO Auto-generated method stub
-        return 0;
+        if (posts.size() == 0) return 0;
+
+        int mostEndorsedAccount = 0;
+        int mostAccountEndorsements = 0;
+
+        for (Map.Entry<Integer, User> account : accounts.entrySet()) {
+            int accountEndorsements = 0;
+            User user = account.getValue();
+            for (BasePost post : posts) {
+                if (post instanceof Interactable && post.getAuthorID() == user.getId()) {
+                    accountEndorsements += ((Interactable) post).getEndorseCount();
+                }
+
+            }
+            if (accountEndorsements > mostAccountEndorsements) {
+                mostAccountEndorsements = accountEndorsements;
+                mostEndorsedAccount = user.getId();
+            }
+        }
+
+        return mostEndorsedAccount;
     }
 
     @Override
     public void erasePlatform() {
-        // TODO Auto-generated method stub
+        // Reset the sequential nextID counter for posts
+        BasePost.resetCounter();
 
+        // Clear both post and account lists
+        posts.clear();
+        accounts.clear();
     }
 
     @Override
     public void savePlatform(String filename) throws IOException {
-        // TODO Auto-generated method stub
+        File file = new File(filename);
+        if (!file.createNewFile()) { System.out.println("File already exists."); }
 
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+            for (BasePost post : posts) {
+                writer.write(post.toString());
+                writer.newLine();
+            }
+            writer.newLine();
+            for (Map.Entry<Integer, User> account : accounts.entrySet()) {
+                writer.write(account.getValue().toString());
+                writer.newLine();
+            }
+            writer.newLine();
+            writer.write("nextId: " + BasePost.getCounter());
+        }
     }
 
     @Override

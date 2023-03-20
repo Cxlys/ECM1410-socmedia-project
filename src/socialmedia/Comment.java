@@ -30,4 +30,9 @@ public class Comment extends Endorsement implements Interactable {
     public void incrementEndorseCount() {
         endorseCount++;
     }
+
+    @Override
+    public String toString() {
+        return "Comment," + id + "," + message + ',' + authorID + "," + originalPostId + "," + commentCount + "," + endorseCount;
+    }
 }

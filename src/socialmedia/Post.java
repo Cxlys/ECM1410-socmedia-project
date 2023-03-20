@@ -31,4 +31,9 @@ public class Post extends BasePost implements Interactable {
     public void incrementEndorseCount() {
         endorseCount++;
     }
+
+    @Override
+    public String toString() {
+        return "Post," + id + "," + message + ',' + authorID + "," + commentCount + "," + endorseCount;
+    }
 }

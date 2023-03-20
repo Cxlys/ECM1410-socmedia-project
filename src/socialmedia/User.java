@@ -5,7 +5,7 @@ import java.util.Objects;
 public class User {
     private int id;
     private String handle;
-    private String description;
+    private String description = "";
 
     public User(String handle){
         this.handle = handle;
@@ -31,5 +31,8 @@ public class User {
     public void setHandle(String handle) {
         this.handle = handle;
         updateId();
+    }
+    public String toString(){
+        return "User," + id + ',' + handle + ',' + description;
     }
 }

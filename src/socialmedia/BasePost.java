@@ -4,6 +4,14 @@ public abstract class BasePost {
 
     static int nextID = 0;
     
+    public static void resetCounter() {
+        nextID = 0;
+    }
+
+    public static int getCounter() {
+        return nextID;
+    }
+    
     protected int id;
     protected String message;
     protected int authorID;
@@ -18,5 +26,11 @@ public abstract class BasePost {
 
     public int getAuthorID() {
         return authorID;
+    }
+    public void setAuthorID(int newID) { authorID = newID; }
+
+    @Override
+    public String toString() {
+        return "";
     }
 }

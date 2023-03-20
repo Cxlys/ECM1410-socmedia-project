@@ -12,4 +12,9 @@ public class Endorsement extends BasePost {
     public int getOriginalPostID() {
         return originalPostId;
     }
+
+    @Override
+    public String toString() {
+        return "Endorsement," + id + "," + message + ',' + authorID + "," + originalPostId;
+    }
 }
