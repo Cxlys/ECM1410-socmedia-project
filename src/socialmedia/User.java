@@ -33,6 +33,6 @@ public class User {
         updateId();
     }
     public String toString(){
-        return "User," + id + ',' + handle + ',' + description;
+        return "User," + handle + ',' + description;
     }
 }

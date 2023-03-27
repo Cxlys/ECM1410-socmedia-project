@@ -124,13 +124,18 @@ public class SocialMedia implements SocialMediaPlatform {
         return post.getId();
     }
 
-    @Override
-    public int endorsePost(String handle, int id)
-            throws HandleNotRecognisedException, PostIDNotRecognisedException, NotActionablePostException {
-        BasePost post = posts.stream()
+    BasePost findPostById(int id) {
+        return posts.stream()
                 .filter(x -> Objects.equals(x.getId(), id))
                 .findFirst()
                 .orElse(null);
+    }
+
+    @Override
+    public int endorsePost(String handle, int id)
+            throws HandleNotRecognisedException, PostIDNotRecognisedException, NotActionablePostException {
+
+        BasePost post = findPostById(id);
 
         // Error handling
         if (!accounts.containsKey(Objects.hash(handle)))
@@ -151,10 +156,7 @@ public class SocialMedia implements SocialMediaPlatform {
     public int commentPost(String handle, int id, String message) throws HandleNotRecognisedException,
             PostIDNotRecognisedException, NotActionablePostException, InvalidPostException {
 
-        BasePost post = posts.stream()
-                .filter(x -> Objects.equals(x.getId(), id))
-                .findFirst()
-                .orElse(null);
+        BasePost post = findPostById(id);
 
         // Error handling
         if (!accounts.containsKey(Objects.hash(handle)))
@@ -170,6 +172,15 @@ public class SocialMedia implements SocialMediaPlatform {
 
         Comment comment = new Comment(message, Objects.hash(handle), id);
         posts.add(comment);
+
+        Interactable pointer = (Interactable) findPostById(comment.getOriginalPostID());
+
+        // Cascade up and increment all parents' comment counts
+        while (!(pointer instanceof Post)) {
+            pointer.incrementCommentCount();
+            pointer = (Interactable) findPostById(((Endorsement) pointer).getOriginalPostID());
+        }
+
         return comment.getId();
     }
 
@@ -184,10 +195,11 @@ public class SocialMedia implements SocialMediaPlatform {
 
         // From post:
         // Find all comments and endorsements linked to post
-        // Find all comments and endorsemnets linked to comment/endorsement
+        // Find all comments and endorsements linked to comment/endorsement
         // Repeat until clean
 
-        deleteAllRelatedPosts(post, posts);
+        int postsRemoved = deleteAllRelatedPosts(post, posts);
+        posts.remove(post);
     }
 
     /**
@@ -196,13 +208,23 @@ public class SocialMedia implements SocialMediaPlatform {
      * @param original Post for which all of its children should be found.
      * @param list List to be iterated over.
      */
-    void deleteAllRelatedPosts(BasePost original, List<BasePost> list) { // Add void Predicate later
-        list.stream()
-                .filter(x -> x instanceof Endorsement && ((Endorsement) x).getOriginalPostID() == original.getId())
-                .forEach(x -> {
-                    if (x instanceof Comment) deleteAllRelatedPosts(x, list);
-                    posts.remove(x);
-                });
+    int deleteAllRelatedPosts(BasePost original, List<BasePost> list) { // Add void Predicate later
+        int postsRemoved = 0;
+
+        // Error here, doesnt remove all, ConcurrentModificationException
+        for (BasePost post : posts) {
+            if (post instanceof Endorsement && ((Endorsement) post).getOriginalPostID() == original.getId()) {
+                if (post instanceof Comment) {
+                    System.out.println("\n");
+                    postsRemoved += deleteAllRelatedPosts(post, list);
+                }
+
+                System.out.println("Trying to delete " + post);
+                posts.remove(post);
+            }
+        }
+
+        return postsRemoved++;
     }
 
     @Override
@@ -322,26 +344,72 @@ public class SocialMedia implements SocialMediaPlatform {
     @Override
     public void savePlatform(String filename) throws IOException {
         File file = new File(filename);
-        if (!file.createNewFile()) { System.out.println("File already exists."); }
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+            if (!file.createNewFile()) {
+                System.out.println("File already exists.");
+            }
+
             for (BasePost post : posts) {
                 writer.write(post.toString());
                 writer.newLine();
             }
-            writer.newLine();
             for (Map.Entry<Integer, User> account : accounts.entrySet()) {
                 writer.write(account.getValue().toString());
                 writer.newLine();
             }
-            writer.newLine();
-            writer.write("nextId: " + BasePost.getCounter());
+            writer.write("nextId, " + BasePost.getCounter());
+        } catch (IOException e) {
+            throw new IOException();
         }
     }
 
     @Override
     public void loadPlatform(String filename) throws IOException, ClassNotFoundException {
         // TODO Auto-generated method stub
+        // Get file
+        File file = new File(filename);
 
+        // Instantiate reader
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            // For each line in the file
+            for (String line : (String[]) reader.lines().toArray()) {
+                // Split file by commas
+                String[] data = line.split(",");
+
+                switch (data[0]) {
+                    case "Post" -> {
+                        Post post = new Post(data[2], Integer.parseInt(data[3]), Integer.parseInt(data[1]));
+                        post.setCounts(Integer.parseInt(data[4]), Integer.parseInt(data[5]));
+                        posts.add(post);
+                    }
+
+                    case "Comment" -> {
+                        Comment com = new Comment(data[2], Integer.parseInt(data[3]), Integer.parseInt(data[1]));
+                        com.setCounts(Integer.parseInt(data[4]), Integer.parseInt(data[5]));
+                        posts.add(com);
+                    }
+
+                    case "Endorsement" -> {
+                        Endorsement end = new Endorsement(data[2], Integer.parseInt(data[3]), Integer.parseInt(data[4]),  Integer.parseInt(data[1]));
+                        posts.add(end);
+                    }
+
+                    case "User" -> {
+                        User usr = new User(data[1], data[2]);
+                        accounts.put(Objects.hash(data[1]), usr);
+                    }
+
+                    case "nextId" -> BasePost.setCounter(Integer.parseInt(data[1]));
+                    case "" -> System.out.println("Empty line");
+
+                    case "Default" -> throw new ClassNotFoundException();
+                }
+            }
+        } catch (IOException e) {
+            throw new IOException();
+        }
     }
+
+
 }

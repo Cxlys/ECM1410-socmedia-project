@@ -11,6 +11,10 @@ public abstract class BasePost {
     public static int getCounter() {
         return nextID;
     }
+
+    public static void setCounter(int counter){
+        nextID = counter;
+    }
     
     protected int id;
     protected String message;

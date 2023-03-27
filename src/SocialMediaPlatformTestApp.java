@@ -1,9 +1,7 @@
 package socialmedia;
 
+import socialmedia.socialmedia.excepts.*;
 import socialmedia.socialmedia.interfaces.SocialMediaPlatform;
-import socialmedia.socialmedia.excepts.AccountIDNotRecognisedException;
-import socialmedia.socialmedia.excepts.IllegalHandleException;
-import socialmedia.socialmedia.excepts.InvalidHandleException;
 
 /**
  * A short program to illustrate an app testing some minimal functionality of a
@@ -16,6 +14,16 @@ import socialmedia.socialmedia.excepts.InvalidHandleException;
  * @version 1.0
  */
 public class SocialMediaPlatformTestApp {
+	// Check List:
+	// createAccount
+	// removeAccount
+	// createPost
+	// createComment
+	// createEndorsement
+	// getTotalOriginalPosts
+	// getTotalCommentPosts
+	// getTotalEndorsementPosts
+	// getNumberOfAccounts
 
 	/**
 	 * Test method.
@@ -28,26 +36,66 @@ public class SocialMediaPlatformTestApp {
 		SocialMediaPlatform platform = new SocialMedia();
 
 		assert (platform.getNumberOfAccounts() == 0) : "Innitial SocialMediaPlatform not empty as required.";
+		if (platform.getNumberOfAccounts() == 0) System.out.println("Initial SocialMediaPlatform is empty, as required.");
 		assert (platform.getTotalOriginalPosts() == 0) : "Innitial SocialMediaPlatform not empty as required.";
+		if (platform.getTotalOriginalPosts() == 0) System.out.println("Initial SocialMediaPlatform is empty, as required.");
 		assert (platform.getTotalCommentPosts() == 0) : "Innitial SocialMediaPlatform not empty as required.";
+		if (platform.getTotalCommentPosts() == 0) System.out.println("Initial SocialMediaPlatform is empty, as required.");
 		assert (platform.getTotalEndorsmentPosts() == 0) : "Innitial SocialMediaPlatform not empty as required.";
+		if (platform.getTotalEndorsmentPosts() == 0) System.out.println("Initial SocialMediaPlatform is empty, as required.");
 
 		Integer id;
 		try {
 			id = platform.createAccount("my_handle");
+			System.out.println("\n5Number of accounts after addition: " + platform.getNumberOfAccounts());
 			assert (platform.getNumberOfAccounts() == 1) : "number of accounts registered in the system does not match";
 
 			platform.removeAccount(id);
+			System.out.println("Number of accounts after removal: " + platform.getNumberOfAccounts());
 			assert (platform.getNumberOfAccounts() == 0) : "number of accounts registered in the system does not match";
+
+			platform.createAccount("my_handle");
+
+			int postId = platform.createPost("my_handle", "Hello world!");
+			System.out.println("\nNumber of posts after addition: " + platform.getTotalOriginalPosts());
+			assert (platform.getTotalOriginalPosts() == 1) : "number of posts does not match intent";
+
+			int commentId = platform.commentPost("my_handle", postId, "Help");
+			System.out.println("Number of comments after addition: " + platform.getTotalCommentPosts());
+			assert (platform.getTotalCommentPosts() == 1) : "number of posts does not match intent";
+
+			int endorseId = platform.endorsePost("my_handle", postId);
+			System.out.println("Number of comments after addition: " + platform.getTotalEndorsmentPosts());
+			assert (platform.getTotalEndorsmentPosts() == 1) : "number of posts does not match intent";
+
+			platform.deletePost(postId);
+			System.out.println("\nNumber of posts total after removed: " + platform.getTotalOriginalPosts());
+			System.out.println("Number of posts after removed: " + platform.getTotalOriginalPosts());
+			System.out.println("Number of comments after removed: " + platform.getTotalOriginalPosts());
+			System.out.println("Number of endorsements after removed: " + platform.getTotalEndorsmentPosts());
+			assert (platform.getTotalOriginalPosts() + platform.getTotalCommentPosts() + platform.getTotalEndorsmentPosts() == 0) : "number of posts does not match intent";
 
 		} catch (IllegalHandleException e) {
 			assert (false) : "IllegalHandleException thrown incorrectly";
+			System.out.println("Error 0");
 		} catch (InvalidHandleException e) {
 			assert (false) : "InvalidHandleException thrown incorrectly";
+			System.out.println("Error 1");
 		} catch (AccountIDNotRecognisedException e) {
 			assert (false) : "AccountIDNotRecognizedException thrown incorrectly";
+			System.out.println("Error 2");
+		} catch (InvalidPostException e) {
+			assert(false) : "InvalidPostException thrown";
+			System.out.println("Error 3");
+		} catch (HandleNotRecognisedException e) {
+			assert(false) : "HandleNotRecognisedException thrown";
+			System.out.println("Error 4");
+		} catch (PostIDNotRecognisedException e) {
+			assert (false) : "PostIDNotRecognisedException thrown";
+			System.out.println("Error 5");
+		} catch (NotActionablePostException e) {
+			assert(false) : "NotActionablePostException thrown";
+			System.out.println("Error 6");
 		}
-
 	}
-
 }

@@ -7,6 +7,10 @@ public class Comment extends Endorsement implements Interactable {
     public Comment(String message, int authorID, int originalPostID) {
         super(message, authorID, originalPostID);
     }
+    public Comment(String message, int authorID, int originalPostID, int id) {
+        super(message, authorID, originalPostID);
+        this.id = id;
+    }
 
     int commentCount = 0;
     int endorseCount = 0;
@@ -29,6 +33,11 @@ public class Comment extends Endorsement implements Interactable {
     @Override
     public void incrementEndorseCount() {
         endorseCount++;
+    }
+    @Override
+    public void setCounts(int commentCount, int endorseCount) {
+        this.commentCount = commentCount;
+        this.endorseCount = endorseCount;
     }
 
     @Override
