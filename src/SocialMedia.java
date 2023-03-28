@@ -77,10 +77,12 @@ public class SocialMedia implements SocialMediaPlatform {
         if (newHandle.length() == 0 || newHandle.length() > 30 || newHandle.contains(" "))
             throw new InvalidHandleException();
 
+        // Replacing user in the database to accommodate for the new handle (since our hash has been changed).
         accounts.remove(Objects.hash(oldHandle), user);
         user.setHandle(newHandle);
         accounts.put(Objects.hash(newHandle), user);
 
+        // Replace all authorIDs with the new handle's ID.
         posts.stream()
                 .filter(x -> x.getAuthorID() == Objects.hash(oldHandle))
                 .forEach(x -> x.setAuthorID(Objects.hash(newHandle)));
@@ -128,6 +130,11 @@ public class SocialMedia implements SocialMediaPlatform {
         return post.getId();
     }
 
+    /**
+     * The method searches through our database and finds the first post with the given postID.
+     * @param id ID to search for
+     * @return The post related to that ID, or null if a post was not found.
+     */
     BasePost findPostById(int id) {
         return posts.stream()
                 .filter(x -> Objects.equals(x.getId(), id))
@@ -147,7 +154,7 @@ public class SocialMedia implements SocialMediaPlatform {
         if (Objects.equals(post, null)) {
             throw new PostIDNotRecognisedException();
         }
-        if (post instanceof Endorsement && !(post instanceof Comment)) {
+        if (!(post instanceof Interactable)) {
             throw new NotActionablePostException();
         }
 
@@ -194,30 +201,22 @@ public class SocialMedia implements SocialMediaPlatform {
 
     @Override
     public void deletePost(int id) throws PostIDNotRecognisedException {
-        BasePost post = posts.stream()
-                .filter(x -> Objects.equals(x.getId(), id))
-                .findFirst()
-                .orElse(null);
+        BasePost post = findPostById(id);
 
         if (Objects.equals(post, null)) throw new PostIDNotRecognisedException();
 
-        // From post:
-        // Find all comments and endorsements linked to post
-        // Find all comments and endorsements linked to comment/endorsement
-        // Repeat until clean
-
-        int result = deleteAllRelatedPosts(post, posts);
+        int removedCommentCount = deleteAllRelatedPosts(post, posts);
 
         // Cascade up and decrement comment/endorse counts by the amount of posts that were removed by the function
         // All parents should be either Comments or Posts, so we cast to Interactable
-        Interactable pointer = null;
-        if (post instanceof Comment && result != 0) {
+        Interactable pointer;
+        if (post instanceof Comment && removedCommentCount != 0) {
             pointer = (Interactable) findPostById(((Comment) post).getOriginalPostID());
 
             while (pointer != null) {
-                System.out.println("Removing: " + result + " from " + ((BasePost) pointer).getId() + "\n");
+                System.out.println("Removing: " + removedCommentCount + " from " + ((BasePost) pointer).getId() + "\n");
 
-                pointer.setCounts(pointer.getCommentCount() - result, pointer.getEndorseCount());
+                pointer.setCounts(pointer.getCommentCount() - removedCommentCount, pointer.getEndorseCount());
                 pointer = (pointer instanceof Comment) ? (Interactable) findPostById(((Comment) pointer).getOriginalPostID()) : null;
             }
         }
@@ -228,39 +227,48 @@ public class SocialMedia implements SocialMediaPlatform {
      * Not ideal, Big O of O(n + (n^2)^m), however it works for now
      * @param original Post for which all of its children should be found.
      * @param list List to be iterated over.
-     * @return The number of comments removed.
+     * @return The number of comments removed, for use in correcting commentCount values.
      */
     int deleteAllRelatedPosts(BasePost original, List<BasePost> list) { // Add void Predicate later
-        if (original instanceof Endorsement && !(original instanceof Comment)) {
+        if (!(original instanceof Interactable)) { // If original is an Endorsement
             list.remove(original);
             return 0;
         }
 
+        // Create stack to store "tree" levels
         Stack<List<Endorsement>> levels = new Stack<>();
 
+        // Prepare container to store number of deleted comments
         int deletedComments = (original instanceof Comment) ? 1 : 0;
 
+        // Get all children of the original Post
         List<Endorsement> start = list.stream()
                 .filter(x -> x instanceof Endorsement)
                 .map(x -> (Endorsement) x)
                 .filter(x -> ((Endorsement) x).getOriginalPostID() == original.getId())
                 .toList();
 
+        // Push to stack, and remove it from posts.
         levels.push(start);
         list.remove(original);
 
+        // Run until the stack is empty (or, until we can no longer find children of any nodes in level).
         while (!levels.isEmpty()) {
             var level = levels.pop();
 
+            // For every child in level...
             for (Endorsement post : level) {
+                // Get all children of the post
                 var postsRelated = list.stream()
                         .filter(x -> x instanceof Endorsement)
                         .map(x -> (Endorsement) x)
                         .filter(x -> x.getId() == post.getOriginalPostID())
                         .toList();
 
+                // Push all found children to the stack
                 levels.push(postsRelated);
 
+                // Remove all posts discovered from the stack and continue to the next level
                 if (post instanceof Comment) deletedComments++;
                 list.remove(post);
             }
@@ -272,10 +280,7 @@ public class SocialMedia implements SocialMediaPlatform {
     @Override
     public String showIndividualPost(int id) throws PostIDNotRecognisedException {
         // Error handling
-        BasePost post = posts.stream()
-                .filter(x -> Objects.equals(x.getId(), id))
-                .findFirst()
-                .orElse(null);
+        BasePost post = findPostById(id);
 
         if (Objects.equals(post, null)) throw new PostIDNotRecognisedException();
 
@@ -294,7 +299,7 @@ public class SocialMedia implements SocialMediaPlatform {
 
         // Error handling
         if (post == null) throw new PostIDNotRecognisedException();
-        if (post instanceof Endorsement && !(post instanceof Comment)) throw new NotActionablePostException();
+        if (!(post instanceof Interactable)) throw new NotActionablePostException();
 
         builder.append(showIndividualPost(id)).append("\n");
         buildChildrenString(post, builder, 0);
@@ -302,19 +307,30 @@ public class SocialMedia implements SocialMediaPlatform {
         return builder;
     }
 
+    /**
+     * The method builds a string to fit the required format of {@link #showPostChildrenDetails(int) showPostChildrenDetails(id)}
+     * by recursively iterating over the children of the target post in a <strong>breadth-first manner.</strong>
+     * @param target Post in posts list to be targeted by the recursive function.
+     * @param builder StringBuilder reference object to append strings to.
+     * @param indent Starting indent for the printed list.
+     */
     void buildChildrenString(BasePost target, StringBuilder builder, int indent) throws PostIDNotRecognisedException {
         try {
+            // For every post in our list...
             for (BasePost post : posts) {
+                // If the post is a comment and its originalID matches our target's ID...
                 if (post instanceof Comment && ((Comment) post).getOriginalPostID() == target.getId()) {
                     String[] lines = showIndividualPost(post.getId()).split("\n");
 
-                    String appString = ("|\n| > " + lines[0] + "\n").indent(indent) +
+                    // Append a string in the required format to the builder
+                    String appString = (((indent == 0) ? "" : "|\n") + "| > " + lines[0] + "\n").indent(indent) +
                             ((lines[1] + "\n") +
                             (lines[2] + "\n") +
                             (lines[3])).indent(4 + indent);
 
                     builder.append(appString);
 
+                    // Recursively call this function, incrementing the indent by 4 (the tab space taken by "| > ")
                     buildChildrenString(post, builder, indent + 4);
                 }
             }
@@ -375,15 +391,20 @@ public class SocialMedia implements SocialMediaPlatform {
         int mostEndorsedAccount = 0;
         int mostAccountEndorsements = 0;
 
+        // For each user in the database
         for (Map.Entry<Integer, User> account : accounts.entrySet()) {
             int accountEndorsements = 0;
             User user = account.getValue();
+
+            // Loop through all the posts and find all posts related to this user, then increment their accountEndorsements
+            // for each post found.
             for (BasePost post : posts) {
                 if (post instanceof Interactable && post.getAuthorID() == user.getId()) {
                     accountEndorsements += ((Interactable) post).getEndorseCount();
                 }
 
             }
+            // If we have found a more endorsed account, replace the ID in mostAccountEndorsements with the new one.
             if (accountEndorsements > mostAccountEndorsements) {
                 mostAccountEndorsements = accountEndorsements;
                 mostEndorsedAccount = user.getId();

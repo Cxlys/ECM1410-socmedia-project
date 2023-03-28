@@ -36,11 +36,7 @@ public class SocialMediaPlatformTestApp {
 	// loadPlatform
 	// getMostEndorsedPost
 	// getMostEndorsedAccount
-
-	// Functions to do:
-	// showPostChildrenDetails (needs writing)
-
-
+	// showPostChildrenDetails
 
 	/**
 	 * Test method.
@@ -52,7 +48,7 @@ public class SocialMediaPlatformTestApp {
 
 		SocialMediaPlatform platform = new SocialMedia();
 
-//TESTED THROUGHOUT:
+		//TESTED THROUGHOUT:
 		//showIndividualPost
 		//showAccount
 		//getTotalOriginalPosts
@@ -183,11 +179,13 @@ public class SocialMediaPlatformTestApp {
 			int com3 = platform.commentPost("user1", pst, "Where are the examples");
 			platform.commentPost("user1", com3, "They are here");
 
+			// test from root post
 			StringBuilder builder = platform.showPostChildrenDetails(pst);
 			System.out.println(builder.toString());
 
-
-
+			// test from comment
+			StringBuilder builder2 = platform.showPostChildrenDetails(com3);
+			System.out.println(builder2.toString());
 
 		} catch (IllegalHandleException e) {
 			assert (false) : "IllegalHandleException thrown incorrectly";

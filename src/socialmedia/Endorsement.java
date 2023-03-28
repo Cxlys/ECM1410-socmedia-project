@@ -15,11 +15,20 @@ public class Endorsement extends BasePost {
         this.authorID = authorID;
         this.originalPostId = originalPostId;
     }
-    
+
+    /**
+     * The method returns the ID of the original post that was endorsed.
+     * @return ID of the endorsed post.
+     */
     public int getOriginalPostID() {
         return originalPostId;
     }
 
+    /**
+     * The method returns the contents of the class as a string value. Used in this format for saving and loading the
+     * platform.
+     * @return String containing object's contents in the format "Class,id,message,authorID,originalPostId".
+     */
     @Override
     public String toString() {
         return "Endorsement," + id + "," + message + ',' + authorID + "," + originalPostId;
