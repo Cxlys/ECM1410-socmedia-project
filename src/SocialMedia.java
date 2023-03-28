@@ -300,8 +300,11 @@ public class SocialMedia implements SocialMediaPlatform {
         list.stream()
                 .filter(x -> x instanceof Endorsement && ((Endorsement) x).getOriginalPostID() == original.getId())
                 .forEach(x -> {
-                    builder.append()
-                });
+                    builder.append(showIndividualPost(reply));
+                });if (post == null) throw new PostIDNotRecognisedException();
+        if (post instanceof Enmment && x.getOriginalPostID() == post.getId())
+                   .map(x -> (Comment) x)
+                   .filter(x -> x.getOriginalPostID() == post.getId());
     }*/
 
     @Override
@@ -389,10 +392,6 @@ public class SocialMedia implements SocialMediaPlatform {
         File file = new File(filename);
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-            if (!file.createNewFile()) {
-                System.out.println("File already exists.");
-            }
-
             for (BasePost post : posts) {
                 writer.write(post.toString());
                 writer.newLine();
@@ -401,7 +400,7 @@ public class SocialMedia implements SocialMediaPlatform {
                 writer.write(account.getValue().toString());
                 writer.newLine();
             }
-            writer.write("nextId, " + BasePost.getCounter());
+            writer.write("nextId," + BasePost.getCounter());
         } catch (IOException e) {
             throw new IOException();
         }
@@ -416,10 +415,9 @@ public class SocialMedia implements SocialMediaPlatform {
         // Instantiate reader
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             // For each line in the file
-            for (String line : (String[]) reader.lines().toArray()) {
+            for (String line :  reader.lines().toList()) {
                 // Split file by commas
                 String[] data = line.split(",");
-
                 switch (data[0]) {
                     case "Post" -> {
                         Post post = new Post(data[2], Integer.parseInt(data[3]), Integer.parseInt(data[1]));
@@ -439,7 +437,12 @@ public class SocialMedia implements SocialMediaPlatform {
                     }
 
                     case "User" -> {
-                        User usr = new User(data[1], data[2]);
+                        User usr = null;
+                        if (data.length >2){
+                            usr = new User(data[1], data[2]);}
+                        else{
+                            usr = new User(data[1]);
+                        }
                         accounts.put(Objects.hash(data[1]), usr);
                     }
 
