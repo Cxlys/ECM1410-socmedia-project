@@ -173,6 +173,18 @@ public class SocialMediaPlatformTestApp {
 			System.out.println("ID of most endorsed account: " + platform.getMostEndorsedAccount());
 			System.out.println("This should match user1 which is below:");
 			System.out.println(platform.showAccount("user1"));
+			System.out.println("\n\n");
+
+			int pst = platform.createPost("user1", "I like examples");
+			int com1 = platform.commentPost("user1", pst, "No more than me");
+			int com2 = platform.commentPost("user1", com1, "I can prove!");
+			platform.commentPost("user1", com2, "Prove it");
+			platform.commentPost("user1", pst, "Cant you do better");
+			int com3 = platform.commentPost("user1", pst, "Where are the examples");
+			platform.commentPost("user1", com3, "They are here");
+
+			StringBuilder builder = platform.showPostChildrenDetails(pst);
+			System.out.println(builder.toString());
 
 
 

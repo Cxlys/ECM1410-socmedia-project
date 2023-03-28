@@ -288,24 +288,40 @@ public class SocialMedia implements SocialMediaPlatform {
     @Override
     public StringBuilder showPostChildrenDetails(int id)
             throws PostIDNotRecognisedException, NotActionablePostException {
-        return null;
 
-        /* StringBuilder builder = new StringBuilder();
-        BasePost post = posts.get(id)
-        postStringHierarchy(post, posts, builder);
-        return builder; */
+        BasePost post = findPostById(id);
+        StringBuilder builder = new StringBuilder();
+
+        // Error handling
+        if (post == null) throw new PostIDNotRecognisedException();
+        if (post instanceof Endorsement && !(post instanceof Comment)) throw new NotActionablePostException();
+
+        builder.append(showIndividualPost(id)).append("\n");
+        buildChildrenString(post, builder, 0);
+
+        return builder;
     }
 
-    /* StringBuilder postStringHierarchy(BasePost original, List<BasePost> list, StringBuilder builder) { // Add void Predicate later
-        list.stream()
-                .filter(x -> x instanceof Endorsement && ((Endorsement) x).getOriginalPostID() == original.getId())
-                .forEach(x -> {
-                    builder.append(showIndividualPost(reply));
-                });if (post == null) throw new PostIDNotRecognisedException();
-        if (post instanceof Enmment && x.getOriginalPostID() == post.getId())
-                   .map(x -> (Comment) x)
-                   .filter(x -> x.getOriginalPostID() == post.getId());
-    }*/
+    void buildChildrenString(BasePost target, StringBuilder builder, int indent) throws PostIDNotRecognisedException {
+        try {
+            for (BasePost post : posts) {
+                if (post instanceof Comment && ((Comment) post).getOriginalPostID() == target.getId()) {
+                    String[] lines = showIndividualPost(post.getId()).split("\n");
+
+                    String appString = ("|\n| > " + lines[0] + "\n").indent(indent) +
+                            ((lines[1] + "\n") +
+                            (lines[2] + "\n") +
+                            (lines[3])).indent(4 + indent);
+
+                    builder.append(appString);
+
+                    buildChildrenString(post, builder, indent + 4);
+                }
+            }
+        } catch (PostIDNotRecognisedException e) {
+            throw new PostIDNotRecognisedException();
+        }
+    }
 
     @Override
     public int getNumberOfAccounts() {
@@ -415,7 +431,7 @@ public class SocialMedia implements SocialMediaPlatform {
         // Instantiate reader
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             // For each line in the file
-            for (String line :  reader.lines().toList()) {
+            for (String line : reader.lines().toList()) {
                 // Split file by commas
                 String[] data = line.split(",");
                 switch (data[0]) {
