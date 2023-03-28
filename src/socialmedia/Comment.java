@@ -39,6 +39,10 @@ public class Comment extends Endorsement implements Interactable {
         this.commentCount = commentCount;
         this.endorseCount = endorseCount;
     }
+    public void setCounts(int commentCount) {
+        this.commentCount = commentCount;
+    }
+
 
     @Override
     public String toString() {

@@ -103,12 +103,16 @@ public class SocialMedia implements SocialMediaPlatform {
             throw new HandleNotRecognisedException();
 
         List<BasePost> userPosts = posts.stream().filter(x -> x.getAuthorID() == user.getId()).toList();
+        int endorsementCount = 0;
+
+        for (BasePost post : userPosts)
+            if (post instanceof Interactable) endorsementCount += ((Interactable) post).getEndorseCount();
 
         return "ID: " + user.getId() + "\n" +
                 "Handle: " + user.getHandle() + "\n" +
                 "Description: " + user.getDescription() + "\n" +
                 "Post Count: " + userPosts.size() + "\n" +
-                "Endorse Count: *placeholder* \n";
+                "Endorse Count: " + endorsementCount;
     }
 
     @Override
@@ -149,6 +153,10 @@ public class SocialMedia implements SocialMediaPlatform {
 
         Endorsement endorsement = new Endorsement(post.getMessage(), Objects.hash(handle), post.getId());
         posts.add(endorsement);
+
+        // Not necessary to increment all endorse counts, so simply increment the original post by one.
+        ((Interactable) post).incrementEndorseCount();
+
         return endorsement.getId();
     }
 
@@ -176,9 +184,9 @@ public class SocialMedia implements SocialMediaPlatform {
         Interactable pointer = (Interactable) findPostById(comment.getOriginalPostID());
 
         // Cascade up and increment all parents' comment counts
-        while (!(pointer instanceof Post)) {
+        while (pointer != null) {
             pointer.incrementCommentCount();
-            pointer = (Interactable) findPostById(((Endorsement) pointer).getOriginalPostID());
+            pointer = (pointer instanceof Comment) ? (Interactable) findPostById(((Comment) pointer).getOriginalPostID()) : null;
         }
 
         return comment.getId();
@@ -198,19 +206,20 @@ public class SocialMedia implements SocialMediaPlatform {
         // Find all comments and endorsements linked to comment/endorsement
         // Repeat until clean
 
-        int[] result = deleteAllRelatedPosts(post, posts);
-
-        var commentsRemoved = result[0];
-        var endorsesRemoved = result[1];
+        int result = deleteAllRelatedPosts(post, posts);
 
         // Cascade up and decrement comment/endorse counts by the amount of posts that were removed by the function
         // All parents should be either Comments or Posts, so we cast to Interactable
         Interactable pointer = null;
-        if (post instanceof Comment) pointer = (Interactable) findPostById(((Comment) post).getOriginalPostID());
-
-        while (pointer != null) {
-            pointer.setCounts(pointer.getCommentCount() - commentsRemoved, pointer.getEndorseCount() - endorsesRemoved);
+        if (post instanceof Comment && result != 0) {
             pointer = (Interactable) findPostById(((Comment) post).getOriginalPostID());
+
+            while (pointer != null) {
+                System.out.println("Removing: " + result + " from " + ((BasePost) pointer).getId() + "\n");
+
+                pointer.setCounts(pointer.getCommentCount() - result, pointer.getEndorseCount());
+                pointer = (pointer instanceof Comment) ? (Interactable) findPostById(((Comment) pointer).getOriginalPostID()) : null;
+            }
         }
     }
 
@@ -219,13 +228,17 @@ public class SocialMedia implements SocialMediaPlatform {
      * Not ideal, Big O of O(n + (n^2)^m), however it works for now
      * @param original Post for which all of its children should be found.
      * @param list List to be iterated over.
-     * @return Array containing two values: the number of comments removed and the number of endorsements removed.
+     * @return The number of comments removed.
      */
-    int[] deleteAllRelatedPosts(BasePost original, List<BasePost> list) { // Add void Predicate later
+    int deleteAllRelatedPosts(BasePost original, List<BasePost> list) { // Add void Predicate later
+        if (original instanceof Endorsement && !(original instanceof Comment)) {
+            list.remove(original);
+            return 0;
+        }
+
         Stack<List<Endorsement>> levels = new Stack<>();
 
-        int deletedComments = 0;
-        int deletedEndorsements = 0;
+        int deletedComments = (original instanceof Comment) ? 1 : 0;
 
         List<Endorsement> start = list.stream()
                 .filter(x -> x instanceof Endorsement)
@@ -234,13 +247,13 @@ public class SocialMedia implements SocialMediaPlatform {
                 .toList();
 
         levels.push(start);
-        posts.remove(original);
+        list.remove(original);
 
         while (!levels.isEmpty()) {
             var level = levels.pop();
 
             for (Endorsement post : level) {
-                var postsRelated = posts.stream()
+                var postsRelated = list.stream()
                         .filter(x -> x instanceof Endorsement)
                         .map(x -> (Endorsement) x)
                         .filter(x -> x.getId() == post.getOriginalPostID())
@@ -249,13 +262,11 @@ public class SocialMedia implements SocialMediaPlatform {
                 levels.push(postsRelated);
 
                 if (post instanceof Comment) deletedComments++;
-                else deletedEndorsements++;
-
-                posts.remove(post);
+                list.remove(post);
             }
         }
 
-        return new int[] { deletedComments, deletedEndorsements };
+        return deletedComments;
     }
 
     @Override
@@ -270,7 +281,8 @@ public class SocialMedia implements SocialMediaPlatform {
 
         return "ID: " + post.getId() + "\n" +
                 "Account: " + accounts.get(post.getAuthorID()).getHandle() + "\n" + ((post instanceof Interactable) ?
-                ("No. endorsements: " + ((Interactable) post).getEndorseCount() + " | No. comments: " + ((Interactable) post).getCommentCount()) : "");
+                ("No. endorsements: " + ((Interactable) post).getEndorseCount() + " | No. comments: " + ((Interactable) post).getCommentCount())
+                        + "\n" + post.getMessage() : "") ;
     }
 
     @Override
