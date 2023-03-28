@@ -143,7 +143,7 @@ public class SocialMedia implements SocialMediaPlatform {
         if (Objects.equals(post, null)) {
             throw new PostIDNotRecognisedException();
         }
-        if (post instanceof Endorsement) {
+        if (post instanceof Endorsement && !(post instanceof Comment)) {
             throw new NotActionablePostException();
         }
 
@@ -164,7 +164,7 @@ public class SocialMedia implements SocialMediaPlatform {
         if (Objects.equals(post, null)) {
             throw new PostIDNotRecognisedException();
         }
-        if (post instanceof Endorsement) {
+        if (post instanceof Endorsement && !(post instanceof Comment)) {
             throw new NotActionablePostException();
         }
         if (message.length() > 100 || message.length() == 0)
@@ -198,33 +198,64 @@ public class SocialMedia implements SocialMediaPlatform {
         // Find all comments and endorsements linked to comment/endorsement
         // Repeat until clean
 
-        int postsRemoved = deleteAllRelatedPosts(post, posts);
-        posts.remove(post);
+        int[] result = deleteAllRelatedPosts(post, posts);
+
+        var commentsRemoved = result[0];
+        var endorsesRemoved = result[1];
+
+        // Cascade up and decrement comment/endorse counts by the amount of posts that were removed by the function
+        // All parents should be either Comments or Posts, so we cast to Interactable
+        Interactable pointer = null;
+        if (post instanceof Comment) pointer = (Interactable) findPostById(((Comment) post).getOriginalPostID());
+
+        while (pointer != null) {
+            pointer.setCounts(pointer.getCommentCount() - commentsRemoved, pointer.getEndorseCount() - endorsesRemoved);
+            pointer = (Interactable) findPostById(((Comment) post).getOriginalPostID());
+        }
     }
 
     /**
-     * The method recursively takes a post from a given list, and iterates over the list in a depth-first manner until
-     * all of its Comments and Endorsements are found, at which point it removes them from said list.
+     * The method uses a depth-first iterative method to erase an element and all elements related to it by using a stack.
+     * Not ideal, Big O of O(n + (n^2)^m), however it works for now
      * @param original Post for which all of its children should be found.
      * @param list List to be iterated over.
+     * @return Array containing two values: the number of comments removed and the number of endorsements removed.
      */
-    int deleteAllRelatedPosts(BasePost original, List<BasePost> list) { // Add void Predicate later
-        int postsRemoved = 0;
+    int[] deleteAllRelatedPosts(BasePost original, List<BasePost> list) { // Add void Predicate later
+        Stack<List<Endorsement>> levels = new Stack<>();
 
-        // Error here, doesnt remove all, ConcurrentModificationException
-        for (BasePost post : posts) {
-            if (post instanceof Endorsement && ((Endorsement) post).getOriginalPostID() == original.getId()) {
-                if (post instanceof Comment) {
-                    System.out.println("\n");
-                    postsRemoved += deleteAllRelatedPosts(post, list);
-                }
+        int deletedComments = 0;
+        int deletedEndorsements = 0;
 
-                System.out.println("Trying to delete " + post);
+        List<Endorsement> start = list.stream()
+                .filter(x -> x instanceof Endorsement)
+                .map(x -> (Endorsement) x)
+                .filter(x -> ((Endorsement) x).getOriginalPostID() == original.getId())
+                .toList();
+
+        levels.push(start);
+        posts.remove(original);
+
+        while (!levels.isEmpty()) {
+            var level = levels.pop();
+
+            for (Endorsement post : level) {
+                var postsRelated = posts.stream()
+                        .filter(x -> x instanceof Endorsement)
+                        .map(x -> (Endorsement) x)
+                        .filter(x -> x.getId() == post.getOriginalPostID())
+                        .toList();
+
+                levels.push(postsRelated);
+
+                if (post instanceof Comment) deletedComments++;
+                else deletedEndorsements++;
+
                 posts.remove(post);
             }
         }
 
-        return postsRemoved++;
+        return new int[] { deletedComments, deletedEndorsements };
     }
 
     @Override

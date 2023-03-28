@@ -47,7 +47,7 @@ public class SocialMediaPlatformTestApp {
 		Integer id;
 		try {
 			id = platform.createAccount("my_handle");
-			System.out.println("\n5Number of accounts after addition: " + platform.getNumberOfAccounts());
+			System.out.println("\nNumber of accounts after addition: " + platform.getNumberOfAccounts());
 			assert (platform.getNumberOfAccounts() == 1) : "number of accounts registered in the system does not match";
 
 			platform.removeAccount(id);
@@ -61,18 +61,20 @@ public class SocialMediaPlatformTestApp {
 			assert (platform.getTotalOriginalPosts() == 1) : "number of posts does not match intent";
 
 			int commentId = platform.commentPost("my_handle", postId, "Help");
+			int secCommentId = platform.commentPost("my_handle", commentId, "Help pls");
 			System.out.println("Number of comments after addition: " + platform.getTotalCommentPosts());
-			assert (platform.getTotalCommentPosts() == 1) : "number of posts does not match intent";
+			assert (platform.getTotalCommentPosts() == 2) : "number of posts does not match intent";
 
-			int endorseId = platform.endorsePost("my_handle", postId);
-			System.out.println("Number of comments after addition: " + platform.getTotalEndorsmentPosts());
+			int endorseId = platform.endorsePost("my_handle", commentId);
+			System.out.println("Number of endorsements after addition: " + platform.getTotalEndorsmentPosts());
 			assert (platform.getTotalEndorsmentPosts() == 1) : "number of posts does not match intent";
 
-			platform.deletePost(postId);
+			System.out.println("\n");
+			System.out.println(platform.showIndividualPost(postId));
+			platform.deletePost(commentId);
+
 			System.out.println("\nNumber of posts total after removed: " + platform.getTotalOriginalPosts());
-			System.out.println("Number of posts after removed: " + platform.getTotalOriginalPosts());
-			System.out.println("Number of comments after removed: " + platform.getTotalOriginalPosts());
-			System.out.println("Number of endorsements after removed: " + platform.getTotalEndorsmentPosts());
+			System.out.println(platform.showIndividualPost(postId));
 			assert (platform.getTotalOriginalPosts() + platform.getTotalCommentPosts() + platform.getTotalEndorsmentPosts() == 0) : "number of posts does not match intent";
 
 		} catch (IllegalHandleException e) {
