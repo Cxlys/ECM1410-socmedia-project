@@ -1,5 +1,12 @@
 package socialmedia.socialmedia;
 
+/**
+ * Endorsement is a class that simply inherits BasePost, while adding capabilities for an original post ID, allowing us
+ * to use filter operations to relate it to an original Post or Comment.
+ *
+ * @author Daniel Casley, Benjamin Richmond
+ * @version 1.0
+ */
 public class Endorsement extends BasePost {
     int originalPostId;
 

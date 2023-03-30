@@ -1,16 +1,24 @@
 package socialmedia;
 
-import socialmedia.socialmedia.*;
-import socialmedia.socialmedia.excepts.*;
+import socialmedia.socialmedia.BasePost;
+import socialmedia.socialmedia.User;
+import socialmedia.socialmedia.Post;
+import socialmedia.socialmedia.Comment;
+import socialmedia.socialmedia.Endorsement;
 import socialmedia.socialmedia.interfaces.Interactable;
+import socialmedia.socialmedia.excepts.*;
 import socialmedia.socialmedia.interfaces.SocialMediaPlatform;
 
 import java.io.*;
 import java.util.*;
 
+
 public class SocialMedia implements SocialMediaPlatform {
 
+    // Stores accounts with in the form (ID, handle).
     HashMap<Integer, User> accounts = new HashMap<>();
+
+    // Stores all posts that inherit from BasePost (i.e. BasePost, Post, Comment, Endorsement).
     ArrayList<BasePost> posts = new ArrayList<>();
 
     @Override
@@ -92,7 +100,10 @@ public class SocialMedia implements SocialMediaPlatform {
     public void updateAccountDescription(String handle, String description) throws HandleNotRecognisedException {
         User user = accounts.get(Objects.hash(handle));
 
+        // Error handling
         if (Objects.equals(user, null)) throw new HandleNotRecognisedException();
+
+        // Initialise
         user.setDescription(description);
     }
 
@@ -104,12 +115,15 @@ public class SocialMedia implements SocialMediaPlatform {
         if (Objects.equals(user, null))
             throw new HandleNotRecognisedException();
 
+        // Get all posts where the authorID matches that of the given user's
         List<BasePost> userPosts = posts.stream().filter(x -> x.getAuthorID() == user.getId()).toList();
         int endorsementCount = 0;
 
+        // For each post, increment endorsementCount by the endorseCount of that post.
         for (BasePost post : userPosts)
             if (post instanceof Interactable) endorsementCount += ((Interactable) post).getEndorseCount();
 
+        // Return a string constructed from the data.
         return "ID: " + user.getId() + "\n" +
                 "Handle: " + user.getHandle() + "\n" +
                 "Description: " + user.getDescription() + "\n" +
@@ -125,6 +139,7 @@ public class SocialMedia implements SocialMediaPlatform {
         if (message.length() > 100 || message.length() == 0)
             throw new InvalidPostException();
 
+        // Initialise Post
         Post post = new Post(message, Objects.hash(handle));
         posts.add(post);
         return post.getId();
@@ -136,6 +151,7 @@ public class SocialMedia implements SocialMediaPlatform {
      * @return The post related to that ID, or null if a post was not found.
      */
     BasePost findPostById(int id) {
+        // Get all posts with the ID given through the parameter, and if it can't find that post, return null.
         return posts.stream()
                 .filter(x -> Objects.equals(x.getId(), id))
                 .findFirst()
@@ -158,6 +174,7 @@ public class SocialMedia implements SocialMediaPlatform {
             throw new NotActionablePostException();
         }
 
+        // Initialise
         Endorsement endorsement = new Endorsement(post.getMessage(), Objects.hash(handle), post.getId());
         posts.add(endorsement);
 
@@ -185,6 +202,7 @@ public class SocialMedia implements SocialMediaPlatform {
         if (message.length() > 100 || message.length() == 0)
             throw new InvalidPostException();
 
+        // Initialise Comment
         Comment comment = new Comment(message, Objects.hash(handle), id);
         posts.add(comment);
 
@@ -205,12 +223,13 @@ public class SocialMedia implements SocialMediaPlatform {
 
         if (Objects.equals(post, null)) throw new PostIDNotRecognisedException();
 
+        // Delete all posts that are children of the given post
         int removedCommentCount = deleteAllRelatedPosts(post, posts);
 
-        // Cascade up and decrement comment/endorse counts by the amount of posts that were removed by the function
+        // Cascade up and decrement comment counts by the amount of posts that were removed by the function
         // All parents should be either Comments or Posts, so we cast to Interactable
         Interactable pointer;
-        if (post instanceof Comment && removedCommentCount != 0) {
+        if (post instanceof Comment && removedCommentCount != 0) { // Initial check just so if our deleted post was a Post we don't waste time
             pointer = (Interactable) findPostById(((Comment) post).getOriginalPostID());
 
             while (pointer != null) {
@@ -284,6 +303,7 @@ public class SocialMedia implements SocialMediaPlatform {
 
         if (Objects.equals(post, null)) throw new PostIDNotRecognisedException();
 
+        // Return formatted string (endorseCount and commentCount are omitted if post is an endorsement)
         return "ID: " + post.getId() + "\n" +
                 "Account: " + accounts.get(post.getAuthorID()).getHandle() + "\n" + ((post instanceof Interactable) ?
                 ("No. endorsements: " + ((Interactable) post).getEndorseCount() + " | No. comments: " + ((Interactable) post).getCommentCount())
@@ -301,6 +321,7 @@ public class SocialMedia implements SocialMediaPlatform {
         if (post == null) throw new PostIDNotRecognisedException();
         if (!(post instanceof Interactable)) throw new NotActionablePostException();
 
+        // Call to recursive function to find all children and build formatted string
         builder.append(showIndividualPost(id)).append("\n");
         buildChildrenString(post, builder, 0);
 
@@ -375,6 +396,7 @@ public class SocialMedia implements SocialMediaPlatform {
 
         Interactable currentMostEndorsed = new Post("", 0);
 
+        // For each post in our list, if the post's endorseCount is greater then set currentMostEndorsed to post.
         for (BasePost post : posts) {
             if (post instanceof Interactable && ((Interactable) post).getEndorseCount() > currentMostEndorsed.getEndorseCount()) {
                 currentMostEndorsed = (Interactable) post;
@@ -428,15 +450,19 @@ public class SocialMedia implements SocialMediaPlatform {
     public void savePlatform(String filename) throws IOException {
         File file = new File(filename);
 
+        // Create writer
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+            // Create comma seperated line for each post
             for (BasePost post : posts) {
                 writer.write(post.toString());
                 writer.newLine();
             }
+            // Create comma seperated line for each account
             for (Map.Entry<Integer, User> account : accounts.entrySet()) {
                 writer.write(account.getValue().toString());
                 writer.newLine();
             }
+            // Finish document with nextId
             writer.write("nextId," + BasePost.getCounter());
         } catch (IOException e) {
             throw new IOException();
@@ -456,6 +482,7 @@ public class SocialMedia implements SocialMediaPlatform {
                 // Split file by commas
                 String[] data = line.split(",");
                 switch (data[0]) {
+                    // Check first element in comma-separated line to get class name
                     case "Post" -> {
                         Post post = new Post(data[2], Integer.parseInt(data[3]), Integer.parseInt(data[1]));
                         post.setCounts(Integer.parseInt(data[4]), Integer.parseInt(data[5]));
@@ -475,6 +502,8 @@ public class SocialMedia implements SocialMediaPlatform {
 
                     case "User" -> {
                         User usr = null;
+
+                        // Handling in case no description is found
                         if (data.length >2){
                             usr = new User(data[1], data[2]);}
                         else{

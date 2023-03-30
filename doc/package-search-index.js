@@ -1,1 +1,1 @@
-packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"socialmedia"}];updateSearchResults();
+packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"socialmedia"},{"l":"socialmedia.socialmedia"},{"l":"socialmedia.socialmedia.excepts"},{"l":"socialmedia.socialmedia.interfaces"}];updateSearchResults();

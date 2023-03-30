@@ -2,6 +2,16 @@ package socialmedia.socialmedia;
 
 import socialmedia.socialmedia.interfaces.Interactable;
 
+/**
+ * Post is a class that inherits BasePost and implements the interface of Interactable, allowing it to store comment
+ * and endorsmeent information.
+ * <p></p>
+ * Post is inherited by itself to store the functionalities for an original post, as well as the methods of Interactable,
+ * without allowing Endorsement to inherit the same functionality, therefore saving space and complexity.
+ *
+ * @author Daniel Casley, Benjamin Richmond
+ * @version 1.0
+ */
 public class Post extends BasePost implements Interactable {
     public Post(String message, int authorID) {
         id = nextID++;
@@ -16,45 +26,26 @@ public class Post extends BasePost implements Interactable {
     int commentCount = 0;
     int endorseCount = 0;
 
-    /**
-     * The method returns the endorsement count of the post.
-     * @return The comment count of the post.
-     */
     @Override
     public int getCommentCount() {
         return commentCount;
     }
 
-    /**
-     * The method returns the endorsement count of the post.
-     * @return The endorsement count of the post.
-     */
     @Override
     public int getEndorseCount() {
         return endorseCount;
     }
 
-    /**
-     * The method increments the comment count by one. Used when a post is created.
-     */
     @Override
     public void incrementCommentCount() {
         commentCount++;
     }
 
-    /**
-     * The method increments the endorsement count by one. Used when a post is created.
-     */
     @Override
     public void incrementEndorseCount() {
         endorseCount++;
     }
 
-    /**
-     * The method sets the comment and endorse counts to two specified numbers.
-     * @param commentCount Number to set comment counter to
-     * @param endorseCount Number to set endorse counter to
-     */
     @Override
     public void setCounts(int commentCount, int endorseCount) {
         this.commentCount = commentCount;

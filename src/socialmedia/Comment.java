@@ -2,6 +2,13 @@ package socialmedia.socialmedia;
 
 import socialmedia.socialmedia.interfaces.Interactable;
 
+/**
+ * Comment is a class that inherits the Endorsement class (the capabilities to store an <strong>original ID</strong>),
+ * as well as implementing the Interactable interface, allowing it to be commented and endorsed.
+ *
+ * @author Daniel Casley, Benjamin Richmond
+ * @version 1.0
+ */
 public class Comment extends Endorsement implements Interactable {
 
     public Comment(String message, int authorID, int originalPostID) {
@@ -15,45 +22,26 @@ public class Comment extends Endorsement implements Interactable {
     int commentCount = 0;
     int endorseCount = 0;
 
-    /**
-     * The method returns the endorsement count of the post.
-     * @return The comment count of the post.
-     */
     @Override
     public int getCommentCount() {
         return commentCount;
     }
 
-    /**
-     * The method returns the endorsement count of the post.
-     * @return The endorsement count of the post.
-     */
     @Override
     public int getEndorseCount() {
         return endorseCount;
     }
 
-    /**
-     * The method increments the comment count by one. Used when a post is created.
-     */
     @Override
     public void incrementCommentCount() {
         commentCount++;
     }
 
-    /**
-     * The method increments the endorsement count by one. Used when a post is created.
-     */
     @Override
     public void incrementEndorseCount() {
         endorseCount++;
     }
 
-    /**
-     * The method sets the comment and endorse counts to two specified numbers.
-     * @param commentCount Number to set comment counter to
-     * @param endorseCount Number to set endorse counter to
-     */
     @Override
     public void setCounts(int commentCount, int endorseCount) {
         this.commentCount = commentCount;

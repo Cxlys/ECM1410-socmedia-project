@@ -129,7 +129,7 @@ public class SocialMediaPlatformTestApp {
 			System.out.println(platform.showIndividualPost(coolPostID) + "\n");
 
 			//TEST = savePlatform & erasePlatform & loadPlatform
-			platform.savePlatform("savedPlatform");
+			platform.savePlatform("./res/savedPlatform");
 			System.out.println("Platform has been saved. There are currently "
 					+ platform.getNumberOfAccounts() + " accounts, "
 					+ platform.getTotalOriginalPosts() + " posts, "
@@ -141,7 +141,7 @@ public class SocialMediaPlatformTestApp {
 					+ platform.getTotalOriginalPosts() + " posts, "
 					+ platform.getTotalCommentPosts() + " comments, and " +
 					+ platform.getTotalEndorsmentPosts() + " endorsements.");
-			platform.loadPlatform("savedPlatform");
+			platform.loadPlatform("./res/savedPlatform");
 			System.out.println("Platform has been loaded from file. There are now "
 					+ platform.getNumberOfAccounts() + " accounts, "
 					+ platform.getTotalOriginalPosts() + " posts, "

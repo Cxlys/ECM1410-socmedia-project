@@ -1,5 +1,15 @@
 package socialmedia.socialmedia;
 
+/**
+ * BasePost is an <i>abstract class</i> used to construct the classes of <strong>Post</strong>, <strong>Comment</strong> and
+ * <strong>Endorsement</strong>.
+ * <p>
+ * Its existence serves to allow for all components to be stored in one homogenous list, while also allowing Endorsement
+ * to inherit Post's methods without inheriting the Interactable interface.
+ *
+ * @author Daniel Casley
+ * @version 1.0
+ */
 public abstract class BasePost {
 
     static int nextID = 0;
