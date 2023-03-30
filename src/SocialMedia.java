@@ -264,7 +264,7 @@ public class SocialMedia implements SocialMediaPlatform {
         List<Endorsement> start = list.stream()
                 .filter(x -> x instanceof Endorsement)
                 .map(x -> (Endorsement) x)
-                .filter(x -> ((Endorsement) x).getOriginalPostID() == original.getId())
+                .filter(x -> x.getOriginalPostID() == original.getId())
                 .toList();
 
         // Push to stack, and remove it from posts.
@@ -396,7 +396,7 @@ public class SocialMedia implements SocialMediaPlatform {
 
         Interactable currentMostEndorsed = new Post("", 0);
 
-        // For each post in our list, if the post's endorseCount is greater then set currentMostEndorsed to post.
+        // For each post in our list, if the post's endorseCount is greater than set currentMostEndorsed to post.
         for (BasePost post : posts) {
             if (post instanceof Interactable && ((Interactable) post).getEndorseCount() > currentMostEndorsed.getEndorseCount()) {
                 currentMostEndorsed = (Interactable) post;
@@ -452,12 +452,12 @@ public class SocialMedia implements SocialMediaPlatform {
 
         // Create writer
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-            // Create comma seperated line for each post
+            // Create comma separated line for each post
             for (BasePost post : posts) {
                 writer.write(post.toString());
                 writer.newLine();
             }
-            // Create comma seperated line for each account
+            // Create comma separated line for each account
             for (Map.Entry<Integer, User> account : accounts.entrySet()) {
                 writer.write(account.getValue().toString());
                 writer.newLine();
@@ -501,7 +501,7 @@ public class SocialMedia implements SocialMediaPlatform {
                     }
 
                     case "User" -> {
-                        User usr = null;
+                        User usr;
 
                         // Handling in case no description is found
                         if (data.length >2){
