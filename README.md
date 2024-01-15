@@ -1,37 +1,41 @@
-# ECM1410-socmedia-project
+## ECM1410 | Social Media
+A backend application written in Java as part of the University of Exeter's Object Oriented Programming module of 2023. 
+
+### Technologies Used
+- Java
 
 Flash notes from reading specification…
-	• Simple social media platform
+- Simple social media platform
 
 Users can post:
-	• Original messages
-	• Comments
-	• Endorsement posts
-		○ Quote tweets
+- Original messages
+- Comments
+- Endorsement posts
+- Quote tweets
 
 Users have:
-	• Unique ID
-	• String handle
-	• Description
+- Unique ID
+- String handle
+- Description
 
 When an account is removed, all of its posts, comments and endorsements should also be removed.
 
 Posts have:
-	• Unique ID
-		○ Higher the ID, the more recently it was posted
-	• Message up to 100-chars.
-	• Author link
-	• Keep track of comments and endorsements
+- Unique ID
+- - Higher the ID, the more recently it was posted
+- Message up to 100-chars.
+- Author link
+- Keep track of comments and endorsements
 
 Endorsements and comments are children of posts.
 
 Comments have:
-	• A way to point to another post
+- A way to point to another post
 
 Endorsements have…
-	• A way to replicate the endorsed message 
-	• A way to refer to original or comment posts
-	• They cannot be endorsed or commented
+- A way to replicate the endorsed message
+- A way to refer to original or comment posts
+- They cannot be endorsed or commented
 
 When a Post is removed, all of its endorsements should also be removed.
 
