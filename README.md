@@ -4,6 +4,7 @@ A backend application written in Java as part of the University of Exeter's Obje
 ### Technologies Used
 - Java
 
+## Notes
 Flash notes from reading specification…
 - Simple social media platform
 
